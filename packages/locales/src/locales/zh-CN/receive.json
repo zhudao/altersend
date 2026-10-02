@@ -7,8 +7,7 @@
       "mobileDescription": "扫描或导入发送方的二维码，或粘贴 64 字符代码以开始接收。"
     },
     "connecting": {
-      "title": "正在连接",
-      "description": "与发件人建立安全会话。"
+      "title": "正在连接"
     },
     "incomingTransfer": {
       "title": "可用文件",
@@ -34,6 +33,11 @@
     "handshake": {
       "title": "连接正在进行中",
       "description": "完成与发送方的安全握手。"
+    },
+    "relayBusy": {
+      "title": "仍在连接…",
+      "description": "中继当前繁忙，正在尝试直连。最多可能需要一分钟。",
+      "proOffer": "<pro>升级到 Pro</pro> 可优先使用中继。"
     },
     "sessionEnded": {
       "title": "会议结束",

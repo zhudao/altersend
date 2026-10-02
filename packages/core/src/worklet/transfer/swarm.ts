@@ -5,8 +5,8 @@ import { PeerControlChannel } from './control-channel'
 import type { PeerControlMessage } from './control-channel'
 import { PeerIdentityStore, type NoiseKeyPair } from './peer-identity-store'
 import { PeerDrive } from './drive'
-import { relayThrough, isRelayHost } from '../relay/config'
-import { attachProAnnounce } from '../relay/announce'
+import { allRelaysBusy, relayThrough, isRelayHost, wantsRelay } from '../relay/config'
+import { attachRelayDial } from '../relay/announce'
 import { whenRelayConfReady } from '../relay/conf'
 
 type ConnectionType = 'direct' | 'relay'
@@ -24,6 +24,7 @@ export interface TransferSwarmCallbacks {
   onPeerDisconnected: (peerKey: string | null, remainingCount: number) => void
   onControlMessage: (message: PeerControlMessage, session: PeerSession) => void
   onConnectionType?: (peerKey: string, connectionType: ConnectionType) => void
+  onRelayBusy?: () => void
 }
 
 export interface TransferSwarmOptions {
@@ -58,8 +59,11 @@ export class TransferSwarm {
   }
 
   private createSwarm(keyPair?: NoiseKeyPair): Hyperswarm {
-    const swarm = new Hyperswarm({ ...(keyPair ? { keyPair } : {}), relayThrough })
-    attachProAnnounce(swarm.dht)
+    const swarm = new Hyperswarm({
+      ...(keyPair ? { keyPair } : {}),
+      relayThrough: (force: boolean, target: unknown) => this.selectRelays(force, target)
+    })
+    attachRelayDial(swarm.dht, () => this.callbacks.onRelayBusy?.())
     swarm.on('connection', (socket, info) => {
       this.handleConnection(socket, info).catch((err) => {
         console.error(
@@ -73,6 +77,14 @@ export class TransferSwarm {
     })
     swarm.on('update', () => {})
     return swarm
+  }
+
+  private selectRelays(force: boolean, swarm: unknown): Uint8Array[] | null {
+    const keys = relayThrough(force, swarm)
+    if (keys === null && wantsRelay(force, swarm) && allRelaysBusy()) {
+      this.callbacks.onRelayBusy?.()
+    }
+    return keys
   }
 
   private async handleConnection(socket: PeerSocket, info: PeerInfo): Promise<void> {

@@ -1,7 +1,9 @@
 import React, { PropsWithChildren } from 'react'
 import { View, ActivityIndicator, StyleSheet } from 'react-native'
-import { useTheme } from '@altersend/components'
-import { useTranslation } from '@altersend/locales'
+import { useRouter } from 'expo-router'
+import { ExternalLink, useTheme } from '@altersend/components'
+import { getConnectingStatusCopy, useSubscriptionStore, useTransferStore } from '@altersend/domain'
+import { Trans, useTranslation } from '@altersend/locales'
 import { IllustrationLayout } from '@/src/components'
 import ConnectingSvg from '../../../../../../assets/connecting.svg'
 import { Text } from '@/src/components/ThemedText'
@@ -22,6 +24,10 @@ export function ReceiveConnectingView({
 }: PropsWithChildren<ReceiveConnectingViewProps>) {
   const { t } = useTranslation(['receive'])
   const { theme } = useTheme()
+  const router = useRouter()
+  const relayBusy = useTransferStore((s) => s.relayBusy)
+  const isPro = useSubscriptionStore((s) => s.active)
+  const status = getConnectingStatusCopy(t, relayBusy)
 
   return (
     <IllustrationLayout
@@ -45,11 +51,28 @@ export function ReceiveConnectingView({
           <ActivityIndicator color={theme.colors.colorAccent} size='small' />
           <View style={styles.textWrap}>
             <Text style={[styles.title, { color: theme.colors.colorTextPrimary }]}>
-              {t('receive:page.handshake.title')}
+              {status.title}
             </Text>
             <Text style={[styles.description, { color: theme.colors.colorTextSecondary }]}>
-              {t('receive:page.handshake.description')}
+              {status.description}
             </Text>
+            {relayBusy && !isPro ? (
+              <Text
+                style={[
+                  styles.description,
+                  styles.proOffer,
+                  { color: theme.colors.colorTextSecondary }
+                ]}
+              >
+                <Trans
+                  ns='receive'
+                  i18nKey='page.relayBusy.proOffer'
+                  components={{
+                    pro: <ExternalLink inline onPress={() => router.push('/account')} />
+                  }}
+                />
+              </Text>
+            ) : null}
           </View>
         </View>
       </View>
@@ -80,5 +103,8 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 14,
     lineHeight: 20
+  },
+  proOffer: {
+    marginTop: 6
   }
 })

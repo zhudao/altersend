@@ -6,6 +6,7 @@ export { isValidHexKey } from '../../../../packages/core/src/worklet/transfer/ut
 
 export const TRANSFER_ERROR_CODES = {
   peerUnreachable: 'peer_unreachable',
+  relayBusy: 'relay_busy',
   invalidTopic: 'invalid_topic',
   joinFailed: 'join_failed',
   transferFailed: 'transfer_failed',

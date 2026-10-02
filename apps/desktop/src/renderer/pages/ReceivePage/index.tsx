@@ -1,6 +1,6 @@
-import { Button, Spinner } from '@altersend/components'
+import { Button, ExternalLink, Spinner } from '@altersend/components'
 import { InfoIcon } from '@altersend/components/icons'
-import { useTranslation } from '@altersend/locales'
+import { Trans, useTranslation } from '@altersend/locales'
 import { TransferActionGroup, TransferStatusPanel, TransferCardFrame } from '../../components'
 import { openSettingsPanel } from '../../components/Settings'
 import { ReceiveCompleteView } from './ReceiveCompleteView'
@@ -10,10 +10,12 @@ import { ReceiveJoinView } from './ReceiveJoinView'
 
 import {
   clearSession,
+  getConnectingStatusCopy,
   getReceivePageCopy,
   getReceiveStep,
   isSessionOverStep,
   useReceiveDownloads,
+  useSubscriptionStore,
   useTransferStore
 } from '@altersend/domain'
 
@@ -25,6 +27,8 @@ export default function ReceivePage() {
   const isReconnecting = useTransferStore((s) => s.isReconnecting)
   const reconnectExhausted = useTransferStore((s) => s.reconnectExhausted)
   const sessionEndedByPeer = useTransferStore((s) => s.sessionEndedByPeer)
+  const relayBusy = useTransferStore((s) => s.relayBusy)
+  const isPro = useSubscriptionStore((s) => s.active)
 
   const { totals, fileOffers, textOffers, allDownloaded } = useReceiveDownloads()
   const fileCount = fileOffers.length
@@ -68,13 +72,25 @@ export default function ReceivePage() {
     }
 
     if (step === 'connecting') {
-      return (
-        <TransferStatusPanel
-          loading
-          description={t('receive:page.handshake.description')}
-          title={t('receive:page.handshake.title')}
-        />
-      )
+      const status = getConnectingStatusCopy(t, relayBusy)
+      const description =
+        relayBusy && !isPro ? (
+          <>
+            <span className='block'>{status.description}</span>
+            <span className='mt-1.5 block'>
+              <Trans
+                ns='receive'
+                i18nKey='page.relayBusy.proOffer'
+                components={{
+                  pro: <ExternalLink inline onPress={() => openSettingsPanel('account')} />
+                }}
+              />
+            </span>
+          </>
+        ) : (
+          status.description
+        )
+      return <TransferStatusPanel loading description={description} title={status.title} />
     }
 
     if (isSessionOverStep(step)) {

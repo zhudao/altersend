@@ -209,6 +209,9 @@ function dispatchStatusEvent(event: StatusEvent): void {
         })
       }
       return
+    case 'relay-busy':
+      dispatchToTransferStore({ type: 'relay_busy' })
+      return
     case 'peer-client':
       if (event.peer && event.client) {
         dispatchToTransferStore({

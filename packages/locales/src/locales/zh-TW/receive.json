@@ -7,8 +7,7 @@
       "mobileDescription": "掃描或匯入傳送方的 QR，或貼上 64 字元代碼開始接收。"
     },
     "connecting": {
-      "title": "正在連接",
-      "description": "與寄件者建立安全會話。"
+      "title": "正在連接"
     },
     "incomingTransfer": {
       "title": "可用文件",
@@ -34,6 +33,11 @@
     "handshake": {
       "title": "連接正在進行中",
       "description": "完成與發送方的安全握手。"
+    },
+    "relayBusy": {
+      "title": "仍在連線…",
+      "description": "中繼目前忙碌中，正在嘗試直連。最多可能需要一分鐘。",
+      "proOffer": "<pro>升級到 Pro</pro> 可優先使用中繼。"
     },
     "sessionEnded": {
       "title": "會議結束",

@@ -15,6 +15,8 @@
     "invalidTopic": "连接代码无效。",
     "joinFailed": "无法加入会话。",
     "peerUnreachable": "无法连接到发送方。请检查代码后重试。",
+    "relayBusy": "无法连接。直连未成功，且中继繁忙。请在任一设备上换一个网络。",
+    "relayBusyFree": "无法连接。直连未成功，且中继繁忙。请在任一设备上换一个网络，或升级到 Pro。",
     "transferFailed": "传输失败。请重试。",
     "downloadFailed": "下载失败。请重试。"
   }

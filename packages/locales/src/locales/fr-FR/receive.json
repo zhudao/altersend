@@ -7,8 +7,7 @@
       "mobileDescription": "Scannez ou importez le QR de l’expéditeur, ou collez son code de 64 caractères pour démarrer le transfert."
     },
     "connecting": {
-      "title": "Connexion",
-      "description": "Établir une session sécurisée avec l'expéditeur."
+      "title": "Connexion"
     },
     "incomingTransfer": {
       "title": "Fichiers disponibles",
@@ -34,6 +33,11 @@
     "handshake": {
       "title": "Connexion en cours",
       "description": "Terminer la poignée de main sécurisée avec l’expéditeur."
+    },
+    "relayBusy": {
+      "title": "Connexion toujours en cours…",
+      "description": "Le relais est saturé pour le moment, nous essayons donc une connexion directe. Cela peut prendre jusqu'à une minute.",
+      "proOffer": "<pro>Passez à Pro</pro> pour être prioritaire sur le relais."
     },
     "sessionEnded": {
       "title": "Séance terminée",

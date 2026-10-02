@@ -36,6 +36,10 @@ export function getTransferErrorCode(
   return fallback
 }
 
+export function getRelayBusyError(t: Translate, isPro: boolean): string {
+  return t(isPro ? 'errors:transfer.relayBusy' : 'errors:transfer.relayBusyFree')
+}
+
 export function getDisplayError(
   t: Translate,
   code: TransferErrorCode | null,
@@ -50,6 +54,8 @@ export function getDisplayError(
       return t('errors:transfer.joinFailed')
     case TRANSFER_ERROR_CODES.peerUnreachable:
       return t('errors:transfer.peerUnreachable')
+    case TRANSFER_ERROR_CODES.relayBusy:
+      return t('errors:transfer.relayBusy')
     case TRANSFER_ERROR_CODES.downloadFailed:
       return t('errors:transfer.downloadFailed')
     case TRANSFER_ERROR_CODES.transferFailed:

@@ -15,6 +15,8 @@
     "invalidTopic": "連線代碼無效。",
     "joinFailed": "無法加入工作階段。",
     "peerUnreachable": "無法連線到傳送者。請確認代碼後再試一次。",
+    "relayBusy": "無法連線。直連未成功，且中繼忙碌中。請在任一裝置上換一個網路。",
+    "relayBusyFree": "無法連線。直連未成功，且中繼忙碌中。請在任一裝置上換一個網路，或升級到 Pro。",
     "transferFailed": "傳輸失敗。請再試一次。",
     "downloadFailed": "下載失敗。請再試一次。"
   }

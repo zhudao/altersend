@@ -7,8 +7,7 @@
       "mobileDescription": "Scanne oder importiere den QR-Code des Senders oder füge den 64-Zeichen-Code ein, um die Übertragung zu starten."
     },
     "connecting": {
-      "title": "Verbinden",
-      "description": "Aufbau einer sicheren Sitzung mit dem Absender."
+      "title": "Verbinden"
     },
     "incomingTransfer": {
       "title": "Dateien verfügbar",
@@ -34,6 +33,11 @@
     "handshake": {
       "title": "Verbindung läuft",
       "description": "Abschluss des sicheren Handshakes mit dem Absender."
+    },
+    "relayBusy": {
+      "title": "Verbindung wird weiter aufgebaut…",
+      "description": "Das Relay ist gerade ausgelastet, daher versuchen wir eine direkte Verbindung. Das kann bis zu einer Minute dauern.",
+      "proOffer": "<pro>Upgraden Sie auf Pro</pro>, um Vorrang auf dem Relay zu haben."
     },
     "sessionEnded": {
       "title": "Sitzung beendet",

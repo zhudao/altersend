@@ -19,6 +19,7 @@ export type TransferStatus =
   | 'disconnected'
   | 'reconnecting'
   | 'connection-type'
+  | 'relay-busy'
   | 'peer-client'
   | 'peer-unauthenticated'
   | 'peer-authenticated'
@@ -27,6 +28,7 @@ export type TransferRole = 'sender' | 'receiver'
 
 export const TRANSFER_ERROR_CODES = {
   peerUnreachable: 'peer_unreachable',
+  relayBusy: 'relay_busy',
   invalidTopic: 'invalid_topic',
   joinFailed: 'join_failed',
   transferFailed: 'transfer_failed',

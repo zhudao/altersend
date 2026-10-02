@@ -2,11 +2,15 @@ import b4a from 'b4a'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   configureRelay,
+  allRelaysBusy,
   isRelayHost,
+  isRelayKey,
+  markRelayBusy,
   proTokenFor,
   relayConfigSummary,
   relayThrough,
-  setRelaySending
+  setRelayRole,
+  wantsRelay
 } from './config'
 
 const KEY_A = 'a'.repeat(64)
@@ -32,7 +36,7 @@ beforeEach(() => {
     customFallback: false,
     proToken: null
   })
-  setRelaySending(false)
+  setRelayRole(null)
 })
 
 afterEach(() => {
@@ -42,12 +46,12 @@ afterEach(() => {
 describe('relay/config', () => {
   it('relayThrough returns null when disabled, even with relays configured', () => {
     configureRelay({ relays: [{ keyHex: KEY_A, host: HOST_A }] })
-    expect(relayThrough(false)).toBeNull()
+    expect(relayThrough(true)).toBeNull()
   })
 
   it('relayThrough returns null when enabled but no relays', () => {
     configureRelay({ enabled: true })
-    expect(relayThrough(false)).toBeNull()
+    expect(relayThrough(true)).toBeNull()
   })
 
   it('relayThrough returns the keys when enabled with relays', () => {
@@ -58,7 +62,7 @@ describe('relay/config', () => {
         { keyHex: KEY_B, host: HOST_B }
       ]
     })
-    const keys = relayThrough(false)
+    const keys = relayThrough(true)
     expect(keys).toHaveLength(2)
     expect(keys?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_A, KEY_B])
   })
@@ -73,10 +77,10 @@ describe('relay/config', () => {
     })
 
     mockUtcOffset(UTC_PLUS_8)
-    expect(relayThrough(false)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_B])
+    expect(relayThrough(true)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_B])
 
     mockUtcOffset(UTC_PLUS_1)
-    expect(relayThrough(false)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_A])
+    expect(relayThrough(true)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_A])
   })
 
   it('relayThrough measures offset distance around the date line', () => {
@@ -89,7 +93,7 @@ describe('relay/config', () => {
     })
 
     mockUtcOffset(600)
-    expect(relayThrough(false)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_B])
+    expect(relayThrough(true)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_B])
   })
 
   it('relayThrough returns all relays when entries carry no utc offset', () => {
@@ -102,7 +106,7 @@ describe('relay/config', () => {
     })
 
     mockUtcOffset(UTC_PLUS_8)
-    expect(relayThrough(false)).toHaveLength(2)
+    expect(relayThrough(true)).toHaveLength(2)
   })
 
   it('isRelayHost matches configured hosts only', () => {
@@ -134,7 +138,7 @@ describe('relay/config', () => {
     })
 
     mockUtcOffset(UTC_PLUS_8)
-    expect(relayThrough(false)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_C])
+    expect(relayThrough(true)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_C])
   })
 
   it('relayThrough works with only custom relays', () => {
@@ -143,7 +147,7 @@ describe('relay/config', () => {
       customRelays: [{ keyHex: KEY_C, host: HOST_C }],
       customConfigured: true
     })
-    expect(relayThrough(false)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_C])
+    expect(relayThrough(true)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_C])
   })
 
   it('fallback adds the nearest official relays after the custom ones', () => {
@@ -159,7 +163,7 @@ describe('relay/config', () => {
     })
 
     mockUtcOffset(UTC_PLUS_8)
-    expect(relayThrough(false)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_C, KEY_B])
+    expect(relayThrough(true)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_C, KEY_B])
   })
 
   it('isRelayHost matches custom relay hosts ignoring case and port', () => {
@@ -194,15 +198,20 @@ describe('proTokenFor', () => {
       relays: [{ keyHex: RELAY_KEY, host: '1.2.3.4' }],
       proToken: TOKEN
     })
-    setRelaySending(true)
+    setRelayRole('sender')
   })
 
   it('announces to a known relay while sending', () => {
     expect(proTokenFor(relayKey())).toBe(TOKEN)
   })
 
-  it('stays silent while receiving', () => {
-    setRelaySending(false)
+  it('announces while receiving, so a Pro receiver covers the transfer', () => {
+    setRelayRole('receiver')
+    expect(proTokenFor(relayKey())).toBe(TOKEN)
+  })
+
+  it('stays silent outside a transfer', () => {
+    setRelayRole(null)
     expect(proTokenFor(relayKey())).toBeNull()
   })
 
@@ -265,10 +274,10 @@ describe('custom relays use the same nearest-first selection as official', () =>
     })
 
     mockUtcOffset(UTC_PLUS_8)
-    expect(relayThrough(false)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_D])
+    expect(relayThrough(true)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_D])
 
     mockUtcOffset(300)
-    expect(relayThrough(false)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_C])
+    expect(relayThrough(true)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_C])
   })
 
   it('keeps every custom relay when the org record carries no utc offsets', () => {
@@ -283,7 +292,7 @@ describe('custom relays use the same nearest-first selection as official', () =>
     })
 
     mockUtcOffset(UTC_PLUS_8)
-    expect(relayThrough(false)).toHaveLength(2)
+    expect(relayThrough(true)).toHaveLength(2)
   })
 
   it('fallback appends the nearest official relay to the nearest custom one', () => {
@@ -302,6 +311,104 @@ describe('custom relays use the same nearest-first selection as official', () =>
     })
 
     mockUtcOffset(UTC_PLUS_8)
-    expect(relayThrough(false)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_D, KEY_B])
+    expect(relayThrough(true)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_D, KEY_B])
+  })
+})
+
+describe('relay is a fallback, not the first path', () => {
+  beforeEach(() => {
+    configureRelay({
+      enabled: true,
+      relays: [
+        { keyHex: KEY_A, host: HOST_A, utcOffset: 1 },
+        { keyHex: KEY_B, host: HOST_B, utcOffset: -5 }
+      ]
+    })
+    mockUtcOffset(UTC_PLUS_1)
+  })
+
+  it('stays direct until hyperswarm forces a relay', () => {
+    expect(relayThrough(false)).toBeNull()
+    expect(relayThrough(false, { dht: { randomized: false } })).toBeNull()
+  })
+
+  it('relays straight away when our own NAT is randomized', () => {
+    const keys = relayThrough(false, { dht: { randomized: true } })
+    expect(keys?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_A])
+  })
+
+  it('skips a busy relay for the next nearest one', () => {
+    markRelayBusy(b4a.from(KEY_A, 'hex'))
+    expect(relayThrough(true)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_B])
+    expect(allRelaysBusy()).toBe(false)
+  })
+
+  it('gives up on relaying when every relay is busy', () => {
+    markRelayBusy(b4a.from(KEY_A, 'hex'))
+    markRelayBusy(b4a.from(KEY_B, 'hex'))
+    expect(relayThrough(true)).toBeNull()
+    expect(allRelaysBusy()).toBe(true)
+  })
+
+  it('retries a busy relay after it cools down', () => {
+    markRelayBusy(b4a.from(KEY_A, 'hex'))
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 11 * 60 * 1000)
+    expect(relayThrough(true)?.map((k) => b4a.toString(k, 'hex'))).toEqual([KEY_A])
+  })
+
+  it('recognises configured relay keys only', () => {
+    expect(isRelayKey(b4a.from(KEY_A, 'hex'))).toBe(true)
+    expect(isRelayKey(b4a.from(KEY_C, 'hex'))).toBe(false)
+  })
+})
+
+describe('upgrading to Pro', () => {
+  it('forgets busy relays so the next retry uses the relay', () => {
+    configureRelay({ enabled: true, relays: [{ keyHex: KEY_A, host: HOST_A }], proToken: null })
+    markRelayBusy(b4a.from(KEY_A, 'hex'))
+    expect(allRelaysBusy()).toBe(true)
+
+    configureRelay({ proToken: TOKEN })
+    expect(allRelaysBusy()).toBe(false)
+  })
+
+  it('keeps busy marks when the same token is re-applied', () => {
+    configureRelay({ enabled: true, relays: [{ keyHex: KEY_A, host: HOST_A }], proToken: TOKEN })
+    markRelayBusy(b4a.from(KEY_A, 'hex'))
+
+    configureRelay({ proToken: TOKEN })
+    expect(allRelaysBusy()).toBe(true)
+  })
+})
+
+describe('busy detection', () => {
+  it('never reports busy when no relay is configured yet', () => {
+    configureRelay({ enabled: true, relays: [] })
+    expect(allRelaysBusy()).toBe(false)
+  })
+
+  it('never reports busy while the relay toggle is off', () => {
+    configureRelay({ enabled: false, relays: [{ keyHex: KEY_A, host: HOST_A }] })
+    markRelayBusy(b4a.from(KEY_A, 'hex'))
+    expect(allRelaysBusy()).toBe(false)
+  })
+
+  it('only wants a relay when forced or behind a randomized NAT', () => {
+    configureRelay({ enabled: true, relays: [{ keyHex: KEY_A, host: HOST_A }] })
+    expect(wantsRelay(false)).toBe(false)
+    expect(wantsRelay(true)).toBe(true)
+    expect(wantsRelay(false, { dht: { randomized: true } })).toBe(true)
+  })
+
+  it('treats a self-hosted relay without fallback as the only relay', () => {
+    configureRelay({
+      enabled: true,
+      relays: [{ keyHex: KEY_A, host: HOST_A }],
+      customRelays: [{ keyHex: KEY_C, host: HOST_C }],
+      customConfigured: true,
+      customFallback: false
+    })
+    markRelayBusy(b4a.from(KEY_C, 'hex'))
+    expect(allRelaysBusy()).toBe(true)
   })
 })

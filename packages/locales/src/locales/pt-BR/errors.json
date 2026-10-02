@@ -15,6 +15,8 @@
     "invalidTopic": "O código de conexão é inválido.",
     "joinFailed": "Não foi possível entrar na sessão.",
     "peerUnreachable": "Não foi possível alcançar o remetente. Verifique o código e tente novamente.",
+    "relayBusy": "Não foi possível conectar. A conexão direta não funcionou e o retransmissor está ocupado. Tente outra rede em um dos dispositivos.",
+    "relayBusyFree": "Não foi possível conectar. A conexão direta não funcionou e o retransmissor está ocupado. Tente outra rede em um dos dispositivos ou mude para o Pro.",
     "transferFailed": "A transferência falhou. Tente novamente.",
     "downloadFailed": "O download falhou. Tente novamente."
   }

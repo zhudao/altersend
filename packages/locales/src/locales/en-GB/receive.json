@@ -7,8 +7,7 @@
       "mobileDescription": "Scan or import a sender's QR, or paste their 64-character code to start streaming."
     },
     "connecting": {
-      "title": "Connecting",
-      "description": "Establishing a secure session with the sender."
+      "title": "Connecting"
     },
     "incomingTransfer": {
       "title": "Files available",
@@ -34,6 +33,11 @@
     "handshake": {
       "title": "Connection in progress",
       "description": "Completing the secure handshake with the sender."
+    },
+    "relayBusy": {
+      "title": "Still connecting…",
+      "description": "The relay is busy right now, so we're trying a direct connection. This can take up to a minute.",
+      "proOffer": "<pro>Upgrade to Pro</pro> for priority on the relay."
     },
     "sessionEnded": {
       "title": "Session ended",

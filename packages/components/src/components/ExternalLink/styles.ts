@@ -18,6 +18,14 @@ export const styles = css.create({
       color: tokens.colorTextPrimary
     }
   },
+  inline: {
+    fontWeight: tokens.fontWeightMedium,
+    color: tokens.colorTextPrimary,
+    cursor: 'pointer',
+    textDecorationLine: 'underline',
+    textDecorationColor: tokens.colorTextMuted,
+    textUnderlineOffset: '3px'
+  },
   icon: {
     display: 'inline-flex',
     verticalAlign: 'middle',

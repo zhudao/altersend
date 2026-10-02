@@ -14,7 +14,7 @@ type TransferTone = 'neutral' | 'success' | 'critical'
 
 interface TransferStatusPanelProps {
   title: string
-  description: string
+  description: ReactNode
   tone?: TransferTone
   loading?: boolean
 }

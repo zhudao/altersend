@@ -30,6 +30,7 @@ export const initialTransferSessionState: TransferSessionState = {
   connectionState: 'disconnected',
   connectionType: null,
   connectionTypes: {},
+  relayBusy: false,
   webPeers: {},
   outdatedPeers: {},
   transferPeerKey: null,
@@ -119,6 +120,7 @@ function endSession(state: TransferSessionState): TransferSessionState {
     connectionState: 'disconnected',
     connectionType: null,
     connectionTypes: {},
+    relayBusy: false,
     webPeers: {},
     outdatedPeers: {},
     transferPeerKey: null,
@@ -177,6 +179,7 @@ export function transferSessionReducer(
             connectionState: 'peer-connected',
             peerCount,
             isReconnecting: false,
+            relayBusy: false,
             errorCode: null,
             errorMessage: null
           }
@@ -191,6 +194,9 @@ export function transferSessionReducer(
         connectionType: deriveConnectionType(connectionTypes, state.transferPeerKey)
       }
     }
+    case 'relay_busy':
+      if (state.role !== 'receiver' || state.relayBusy) return state
+      return { ...state, relayBusy: true }
     case 'peer_client_changed':
       return flagPeer(state, 'webPeers', action.peer)
     case 'peer_outdated':
@@ -325,6 +331,7 @@ export function transferSessionReducer(
         connectionState: 'joining',
         connectionType: null,
         connectionTypes: {},
+        relayBusy: false,
         webPeers: {},
         outdatedPeers: {},
         transferPeerKey: null,
@@ -348,6 +355,7 @@ export function transferSessionReducer(
         ),
         transferPeerKey,
         connectionType: deriveConnectionType(state.connectionTypes, transferPeerKey),
+        relayBusy: false,
         transferId: action.files[0]?.transferId ?? state.transferId,
         errorCode: null,
         errorMessage: null
@@ -423,7 +431,10 @@ export function transferSessionReducer(
         isReconnecting: false,
         topic: '',
         connectedPeers: {},
-        errorCode: TRANSFER_ERROR_CODES.peerUnreachable,
+        relayBusy: false,
+        errorCode: state.relayBusy
+          ? TRANSFER_ERROR_CODES.relayBusy
+          : TRANSFER_ERROR_CODES.peerUnreachable,
         errorMessage: null
       }
 

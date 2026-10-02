@@ -1,14 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Button } from '@altersend/components'
+import { View } from 'react-native'
+import { Button, ErrorBanner } from '@altersend/components'
 import { useTranslation } from '@altersend/locales'
 import { useFocusEffect, useRouter } from 'expo-router'
 import {
   JOIN_CODE_PATTERN,
+  TRANSFER_ERROR_CODES,
   getDisplayError,
+  getRelayBusyError,
   getReceivePageCopy,
   getReceiveStep,
   isSessionOverStep,
   useReceiveDownloads,
+  useSubscriptionStore,
   useTransferStore
 } from '@altersend/domain'
 import { clearSession, joinSession } from '@altersend/domain'
@@ -22,7 +26,7 @@ import { errorTap, mediumTap } from '@/src/haptics'
 import { Layout } from '@/src/components'
 
 export default function ReceiveScreen() {
-  const { t } = useTranslation(['receive', 'common', 'errors'])
+  const { t } = useTranslation(['receive', 'common', 'errors', 'settings'])
   const router = useRouter()
   const errorCode = useTransferStore((s) => s.errorCode)
   const role = useTransferStore((s) => s.role)
@@ -31,6 +35,7 @@ export default function ReceiveScreen() {
   const sessionEndedByPeer = useTransferStore((s) => s.sessionEndedByPeer)
   const incomingFileOffers = useTransferStore((s) => s.incomingFileOffers)
   const peerCount = useTransferStore((s) => s.peerCount)
+  const isPro = useSubscriptionStore((s) => s.active)
 
   const [joinCode, setJoinCode] = useState('')
   const [showValidation, setShowValidation] = useState(false)
@@ -121,12 +126,26 @@ export default function ReceiveScreen() {
       </Button>
     )
 
+  const relayBusyFailure = errorCode === TRANSFER_ERROR_CODES.relayBusy
+  const upgradeButton = isPro ? null : (
+    <Button onClick={() => router.push('/account')} size='sm' variant='primary'>
+      {t('settings:account.upgradeToPro')}
+    </Button>
+  )
   const displayError = getDisplayError(t, errorCode)
-  useErrorToast(isSessionOver ? null : displayError, t('receive:errors.transferIssue'))
+  useErrorToast(
+    isSessionOver || relayBusyFailure ? null : displayError,
+    t('receive:errors.transferIssue')
+  )
 
   if (step === 'join') {
     return (
       <Layout title={title}>
+        {relayBusyFailure ? (
+          <View style={{ marginBottom: 16 }}>
+            <ErrorBanner message={getRelayBusyError(t, isPro)} action={upgradeButton} />
+          </View>
+        ) : null}
         <ReceiveJoinView
           joinCode={joinCode}
           onJoinCodeChange={handleJoinCodeChange}

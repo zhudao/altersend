@@ -1,6 +1,7 @@
 import Protomux from 'protomux'
 import c from 'compact-encoding'
-import { proTokenFor } from './config'
+import { isRelayKey, proTokenFor } from './config'
+import { watchRelayStatus } from './status'
 
 const PROTOCOL = 'altersend-pro'
 
@@ -29,15 +30,18 @@ interface DialTarget {
 
 const attached = new WeakSet<DialTarget>()
 
-export function attachProAnnounce(dht: DialTarget): void {
+export function attachRelayDial(dht: DialTarget, onAllRelaysBusy: () => void): void {
   if (attached.has(dht)) return
   attached.add(dht)
 
   const connect = dht.connect.bind(dht)
   dht.connect = (publicKey: Uint8Array, opts?: unknown) => {
     const socket = connect(publicKey, opts)
+    if (!isRelayKey(publicKey)) return socket
+
     const token = proTokenFor(publicKey)
     if (token) announceProToken(socket, token)
+    watchRelayStatus(socket, publicKey, onAllRelaysBusy)
     return socket
   }
 }

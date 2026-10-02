@@ -7,8 +7,7 @@
       "mobileDescription": "送信側のQRをスキャンまたは画像から読み込むか、64文字のコードを貼り付けて受信を開始します。"
     },
     "connecting": {
-      "title": "接続中",
-      "description": "送信側との安全なセッションを確立しています。"
+      "title": "接続中"
     },
     "incomingTransfer": {
       "title": "ファイルがあります",
@@ -34,6 +33,11 @@
     "handshake": {
       "title": "接続処理中",
       "description": "送信側との安全なハンドシェイクを完了しています。"
+    },
+    "relayBusy": {
+      "title": "接続を続けています…",
+      "description": "現在リレーが混雑しているため、直接接続を試しています。最大で1分ほどかかることがあります。",
+      "proOffer": "<pro>Pro にアップグレード</pro>すると、リレーを優先的に利用できます。"
     },
     "sessionEnded": {
       "title": "セッション終了",

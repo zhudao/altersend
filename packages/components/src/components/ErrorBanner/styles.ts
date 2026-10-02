@@ -17,5 +17,9 @@ export const styles = css.create({
     fontSize: tokens.fontSizeMd,
     lineHeight: 20,
     color: tokens.colorDanger
+  },
+  action: {
+    display: 'flex',
+    marginTop: tokens.space3
   }
 })

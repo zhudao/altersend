@@ -63,6 +63,7 @@ export interface TransferSessionState {
   connectionState: ConnectionState
   connectionType: TransferConnectionType | null
   connectionTypes: Record<string, TransferConnectionType>
+  relayBusy: boolean
   transferPeerKey: string | null
   role: TransferRole | null
   peerCount: number
@@ -96,6 +97,7 @@ export type TransferAction =
   | { type: 'set_error'; code?: TransferErrorCode; message: string }
   | { type: 'status_changed'; state: ConnectionState; peers?: number }
   | { type: 'connection_type_changed'; peer: string; connectionType: TransferConnectionType }
+  | { type: 'relay_busy' }
   | { type: 'peer_client_changed'; peer: string; client: 'web' }
   | { type: 'peer_outdated'; peer: string }
   | { type: 'peer_authenticated'; peer: string }

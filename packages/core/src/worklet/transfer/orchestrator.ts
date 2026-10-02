@@ -74,7 +74,7 @@ import { RememberCoordinator } from '../peers/remember-coordinator'
 import { RecognitionCoordinator } from '../peers/recognition-coordinator'
 import { DiscoveryCoordinator } from '../peers/discovery'
 import { PairingCoordinator } from '../peers/pairing-coordinator'
-import { configureRelay, relayConfigSummary, setRelaySending } from '../relay/config'
+import { configureRelay, relayConfigSummary, setRelayRole } from '../relay/config'
 import { applyCustomRelay } from '../relay/conf'
 import { testCustomRelayConnection } from '../relay/testConnection'
 import { upgradeWebRelay } from '../relay/upgradeWebRelay'
@@ -163,6 +163,10 @@ export class TransferOrchestrator implements TransferRPC {
         onConnectionType: (peerKey, connectionType) => {
           if (this.suspended) return
           this.sendStatus('connection-type', { peer: peerKey, connectionType })
+        },
+        onRelayBusy: () => {
+          if (this.suspended) return
+          this.sendStatus('relay-busy')
         }
       },
       { identityStore, drive: true }
@@ -416,7 +420,7 @@ export class TransferOrchestrator implements TransferRPC {
   private setRole(role: TransferRole | null): void {
     if (this.role === role) return
     this.role = role
-    setRelaySending(role === 'sender')
+    setRelayRole(role)
     this.emitIPC(createRoleEvent(role))
   }
 

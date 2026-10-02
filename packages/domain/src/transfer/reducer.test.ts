@@ -583,6 +583,42 @@ describe('transferSessionReducer — connection type (per-peer)', () => {
     expect(state.connectionTypes).toEqual({})
   })
 
+  it('flags a busy relay until the peer connects', () => {
+    let state = apply(make({ role: 'receiver', connectionState: 'joining' }), {
+      type: 'relay_busy'
+    })
+    expect(state.relayBusy).toBe(true)
+
+    state = apply(state, { type: 'status_changed', state: 'peer-connected', peers: 1 })
+    expect(state.relayBusy).toBe(false)
+  })
+
+  it('ignores a busy relay outside a receive session', () => {
+    const sender = make({ role: 'sender' })
+    expect(apply(sender, { type: 'relay_busy' })).toBe(sender)
+  })
+
+  it('forgets a busy relay when a new join starts', () => {
+    const busy = apply(make({ role: 'receiver' }), { type: 'relay_busy' })
+    expect(apply(busy, { type: 'join_requested' }).relayBusy).toBe(false)
+  })
+
+  it('blames the busy relay when connecting times out', () => {
+    const busy = apply(make({ role: 'receiver', connectionState: 'joining' }), {
+      type: 'relay_busy'
+    })
+    const failed = apply(busy, { type: 'peer_unreachable' })
+    expect(failed.errorCode).toBe(TRANSFER_ERROR_CODES.relayBusy)
+    expect(failed.relayBusy).toBe(false)
+  })
+
+  it('keeps the plain unreachable error when no relay was busy', () => {
+    const failed = apply(make({ role: 'receiver', connectionState: 'joining' }), {
+      type: 'peer_unreachable'
+    })
+    expect(failed.errorCode).toBe(TRANSFER_ERROR_CODES.peerUnreachable)
+  })
+
   it('a cancelled download does not put the page into an error state', () => {
     const ready = apply(make({ role: 'receiver' }), {
       type: 'transfer_ready',

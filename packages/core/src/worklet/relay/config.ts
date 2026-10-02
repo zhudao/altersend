@@ -19,8 +19,11 @@ interface RelayState {
   customFallback: boolean
   webRelays: WebRelayEntry[]
   proToken: string | null
-  sending: boolean
+  role: RelayRole
+  busyUntil: Map<string, number>
 }
+
+type RelayRole = 'sender' | 'receiver' | null
 
 const state: RelayState = {
   enabled: false,
@@ -30,8 +33,11 @@ const state: RelayState = {
   customFallback: false,
   webRelays: [],
   proToken: null,
-  sending: false
+  role: null,
+  busyUntil: new Map()
 }
+
+const BUSY_TTL_MS = 10 * 60 * 1000
 
 let relayLoader: (() => void) | null = null
 
@@ -81,10 +87,12 @@ export function configureRelay(input: RelayConfigInput): void {
 
   if (input.relays) {
     state.relays = input.relays.map(toRelayEntry)
+    state.busyUntil.clear()
   }
 
   if (input.customRelays) {
     state.customRelays = input.customRelays.map(toRelayEntry)
+    state.busyUntil.clear()
   }
 
   if (input.webRelays) {
@@ -103,18 +111,19 @@ export function configureRelay(input: RelayConfigInput): void {
   }
 
   if (input.proToken !== undefined) {
+    if (input.proToken && input.proToken !== state.proToken) state.busyUntil.clear()
     state.proToken = input.proToken
   }
 
   if (state.enabled) relayLoader?.()
 }
 
-export function setRelaySending(sending: boolean): void {
-  state.sending = sending
+export function setRelayRole(role: RelayRole): void {
+  state.role = role
 }
 
 export function proTokenFor(key: Uint8Array): string | null {
-  if (!state.proToken || !state.sending) return null
+  if (!state.proToken || state.role === null) return null
   if (!state.relays.some((relay) => b4a.equals(relay.key, key))) return null
   return state.proToken
 }
@@ -145,16 +154,52 @@ function nearestKeys(relays: RelayEntry[]): Uint8Array[] {
   return nearestRelays(relays).map((r) => r.key)
 }
 
-export function relayThrough(_force: boolean, _swarm?: unknown): Uint8Array[] | null {
-  if (!state.enabled) return null
+function isAvailable(relay: RelayEntry): boolean {
+  const until = state.busyUntil.get(b4a.toString(relay.key, 'hex'))
+  return until === undefined || until <= Date.now()
+}
 
+function usableRelayKeys(): Uint8Array[] {
   if (state.customConfigured) {
-    const custom = nearestKeys(state.customRelays)
-    const keys = state.customFallback ? [...custom, ...nearestKeys(state.relays)] : custom
-    return keys.length > 0 ? keys : null
+    const custom = nearestKeys(state.customRelays.filter(isAvailable))
+    return state.customFallback
+      ? [...custom, ...nearestKeys(state.relays.filter(isAvailable))]
+      : custom
   }
 
-  const keys = nearestKeys(state.relays)
+  return nearestKeys(state.relays.filter(isAvailable))
+}
+
+export function markRelayBusy(key: Uint8Array): void {
+  state.busyUntil.set(b4a.toString(key, 'hex'), Date.now() + BUSY_TTL_MS)
+}
+
+function configuredRelays(): RelayEntry[] {
+  if (!state.customConfigured) return state.relays
+  return state.customFallback ? [...state.customRelays, ...state.relays] : state.customRelays
+}
+
+export function allRelaysBusy(): boolean {
+  const relays = configuredRelays()
+  return state.enabled && relays.length > 0 && !relays.some(isAvailable)
+}
+
+export function isRelayKey(key: Uint8Array): boolean {
+  return [...state.relays, ...state.customRelays].some((relay) => b4a.equals(relay.key, key))
+}
+
+function isRandomizedNat(swarm: unknown): boolean {
+  return (swarm as { dht?: { randomized?: boolean } } | undefined)?.dht?.randomized === true
+}
+
+export function wantsRelay(force: boolean, swarm?: unknown): boolean {
+  return state.enabled && (force || isRandomizedNat(swarm))
+}
+
+export function relayThrough(force: boolean, swarm?: unknown): Uint8Array[] | null {
+  if (!wantsRelay(force, swarm)) return null
+
+  const keys = usableRelayKeys()
   return keys.length > 0 ? keys : null
 }
 
@@ -167,7 +212,7 @@ export function isRelayHost(host: string | null | undefined): boolean {
 }
 
 export function webRelayKeyForHost(host: string): Uint8Array | null {
-  if (!state.proToken || !state.sending) return null
+  if (!state.proToken || state.role !== 'sender') return null
   const wanted = bareHost(host)
   return state.webRelays.find((relay) => relay.host === wanted)?.key ?? null
 }

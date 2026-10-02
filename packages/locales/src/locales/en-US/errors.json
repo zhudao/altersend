@@ -15,6 +15,8 @@
     "invalidTopic": "The connection code is invalid.",
     "joinFailed": "Could not join the session.",
     "peerUnreachable": "Couldn't reach the sender. Check the code and try again.",
+    "relayBusy": "Couldn't connect. A direct connection didn't work and the relay is busy. Try a different network on either device.",
+    "relayBusyFree": "Couldn't connect. A direct connection didn't work and the relay is busy. Try a different network on either device, or upgrade to Pro.",
     "transferFailed": "Transfer failed. Try again.",
     "downloadFailed": "Download failed. Try again."
   }

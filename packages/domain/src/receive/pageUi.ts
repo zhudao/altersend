@@ -66,6 +66,14 @@ export function isSessionOverStep(step: ReceiveStep): boolean {
   return step === 'interrupted' || step === 'session_ended'
 }
 
+export function getConnectingStatusCopy(t: Translate, relayBusy: boolean): ReceivePageCopy {
+  const key = relayBusy ? 'relayBusy' : 'handshake'
+  return {
+    title: t(`receive:page.${key}.title`),
+    description: t(`receive:page.${key}.description`)
+  }
+}
+
 export function getReceivePageCopy(
   t: Translate,
   step: ReceiveStep,
@@ -83,7 +91,7 @@ export function getReceivePageCopy(
     case 'connecting':
       return {
         title: t('receive:page.connecting.title'),
-        description: t('receive:page.connecting.description')
+        description: ''
       }
     case 'incoming_transfer': {
       if (textCount > 0) {

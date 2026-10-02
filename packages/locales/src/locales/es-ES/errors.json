@@ -15,6 +15,8 @@
     "invalidTopic": "El código de conexión no es válido.",
     "joinFailed": "No se pudo unir a la sesión.",
     "peerUnreachable": "No se pudo conectar con el remitente. Revisa el código e inténtalo de nuevo.",
+    "relayBusy": "No se ha podido conectar. La conexión directa no ha funcionado y el relé está ocupado. Prueba otra red en cualquiera de los dispositivos.",
+    "relayBusyFree": "No se ha podido conectar. La conexión directa no ha funcionado y el relé está ocupado. Prueba otra red en cualquiera de los dispositivos o pásate a Pro.",
     "transferFailed": "La transferencia ha fallado. Inténtalo de nuevo.",
     "downloadFailed": "La descarga ha fallado. Inténtalo de nuevo."
   }

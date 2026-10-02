@@ -7,8 +7,7 @@
       "mobileDescription": "Escaneie ou importe o QR do remetente, ou cole o código de 64 caracteres para iniciar a transferência."
     },
     "connecting": {
-      "title": "Conectando",
-      "description": "Estabelecendo uma sessão segura com o remetente."
+      "title": "Conectando"
     },
     "incomingTransfer": {
       "title": "Arquivos disponíveis",
@@ -34,6 +33,11 @@
     "handshake": {
       "title": "Conexão em andamento",
       "description": "Concluindo a conexão segura com o remetente."
+    },
+    "relayBusy": {
+      "title": "Ainda conectando…",
+      "description": "O retransmissor está ocupado agora, então estamos tentando uma conexão direta. Isso pode levar até um minuto.",
+      "proOffer": "<pro>Mude para o Pro</pro> para ter prioridade no retransmissor."
     },
     "sessionEnded": {
       "title": "Sessão encerrada",
