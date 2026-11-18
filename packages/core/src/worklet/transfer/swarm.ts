@@ -9,14 +9,23 @@ import {
   allRelaysBusy,
   relayConfigSummary,
   relayThrough,
+  isOfficialRelayHost,
   isRelayHost,
   wantsRelay
 } from '../relay/config'
 import { attachRelayDial } from '../relay/announce'
-import { whenRelayConfReady } from '../relay/conf'
+import { whenOfficialRelaysKnown, whenRelayConfReady } from '../relay/conf'
 import { ConnectProgress, watchDialOpen, type ConnectProgressState } from './connect-progress'
+import { remoteHostOf } from './utils'
 
-type ConnectionType = 'direct' | 'relay'
+type ConnectionType = 'direct' | 'relay' | 'own-relay'
+
+function connectionTypeOf(socket: PeerSocket): ConnectionType {
+  const host = remoteHostOf(socket)
+  if (isOfficialRelayHost(host)) return 'relay'
+  if (isRelayHost(host)) return 'own-relay'
+  return 'direct'
+}
 
 export interface PeerSession {
   socket: PeerSocket
@@ -149,28 +158,47 @@ export class TransferSwarm {
   }
 
   private classifyConnection(socket: PeerSocket, peerKey: string): void {
-    if (!this.callbacks.onConnectionType) return
-    const remoteHost = () =>
-      (socket as unknown as { rawStream?: { remoteHost?: string } }).rawStream?.remoteHost
-    const classify = (): ConnectionType => (isRelayHost(remoteHost()) ? 'relay' : 'direct')
+    const report = this.callbacks.onConnectionType
+    if (!report) return
 
-    let current = classify()
-    this.callbacks.onConnectionType(peerKey, current)
+    let current = connectionTypeOf(socket)
+    let closed = false
+    socket.on('close', () => {
+      closed = true
+    })
+    report(peerKey, current)
 
-    if (current !== 'relay') return
-
-    let ticks = 0
-    const timer = setInterval(() => {
-      const next = classify()
+    const reclassify = (): ConnectionType => {
+      const next = connectionTypeOf(socket)
       if (next !== current) {
         current = next
-        this.callbacks.onConnectionType?.(peerKey, next)
+        report(peerKey, next)
       }
-      if (next !== 'relay' || ++ticks >= 8) clearInterval(timer)
-    }, 2000)
-    ;(timer as unknown as { unref?: () => void }).unref?.()
+      return next
+    }
 
-    socket.on('close', () => clearInterval(timer))
+    const watchUntilDirect = () => {
+      let ticks = 0
+      const timer = setInterval(() => {
+        if (reclassify() === 'direct' || ++ticks >= 8) clearInterval(timer)
+      }, 2000)
+      ;(timer as unknown as { unref?: () => void }).unref?.()
+      socket.on('close', () => clearInterval(timer))
+    }
+
+    if (current !== 'direct') {
+      watchUntilDirect()
+      return
+    }
+
+    whenOfficialRelaysKnown()
+      .then(() => {
+        if (closed) return
+        if (reclassify() !== 'direct') watchUntilDirect()
+      })
+      .catch((error: unknown) => {
+        console.warn('[swarm] connection reclassify failed', error)
+      })
   }
 
   private cleanupPeer(socket: PeerSocket): void {

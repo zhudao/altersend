@@ -89,11 +89,19 @@
       "v2_1_0": {
         "support": {
           "title": "Aiuta AlterSend a restare in vita",
-          "description": "30.000 download, 3 TB via relay, ancora nessuna entrata. Pro paga i relay."
+          "description": "Mantenere i relay costa. Pro copre le spese e mantiene AlterSend gratis per tutti gli altri."
         },
         "relayLimit": {
           "title": "Relay gratis fino a 1 GB",
-          "description": "I trasferimenti diretti restano gratis e illimitati."
+          "description": "I trasferimenti gratuiti via relay ora vanno fino a 1 MB/s. I trasferimenti diretti restano gratis e illimitati."
+        },
+        "autoAccept": {
+          "title": "Accetta automaticamente dai dispositivi accoppiati",
+          "description": "I trasferimenti dai dispositivi accoppiati partono senza chiedere. Attivalo nelle Impostazioni."
+        },
+        "reliability": {
+          "title": "Trasferimenti più stabili",
+          "description": "Dopo un'interruzione di rete il trasferimento riprende da dove si era fermato, e le connessioni non riuscite si possono riprovare."
         }
       },
       "v2_0_0": {
@@ -123,7 +131,8 @@
   "status": {
     "connected": "Connesso",
     "wantsToSend": "vuole inviarti {{label}}{{size}}",
-    "connectedViaRelay": "Connesso via relay"
+    "connectedViaRelay": "Connesso via relay",
+    "connectedViaOwnRelay": "Connesso via il tuo relay"
   },
   "confirm": {
     "leaveShareSession": "L'abbandono terminerà la sessione di condivisione attiva. Continuare?",

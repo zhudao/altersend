@@ -1,31 +1,38 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { View, StyleSheet, Pressable } from 'react-native'
 import { Paths } from 'expo-file-system'
-import { Button, ErrorBanner, useTheme } from '@altersend/components'
+import { Button, useTheme } from '@altersend/components'
 import { DownloadIcon, InfoIcon, PlayIcon } from '@altersend/components/icons'
 import { useTranslation } from '@altersend/locales'
 import { useRouter } from 'expo-router'
 import { uriToPath } from '@/src/api/mobileApi'
 import { ConfirmDialog, Layout, IllustrationLayout } from '@/src/components'
+import { useToast } from '@/src/components/Toast'
 import { lightTap, mediumTap } from '@/src/haptics'
 import { useLeaveSessionConfirm } from '@/src/hooks/useLeaveSessionConfirm'
 import {
+  ReceiveConnectingView,
   ReceiveIncomingView,
   ReceiveInterruptedView,
   ReceiveReconnectingView
 } from '@/src/transfer/receive'
+import { RelayLimitNote } from '@/src/transfer/receive/views/RelayLimitNote'
 import { useErrorToast } from '@/src/transfer/receive/utils/useErrorToast'
 import { exitToReceiveTab } from '@/src/transfer/receive/utils/exitToReceiveTab'
 import ConnectionLostSvg from '../../../../assets/connection-lost.svg'
 import {
+  connectedStatusLabel,
+  getConnectFailureCode,
   getDisplayError,
   getPrimaryDownloadLabel,
   getReceivePageCopy,
   isSessionOverStep,
-  NATIVE_RELAY_MAX_LABEL,
+  reconnectSession,
+  relayPrimaryAction,
   useReceiveActions,
   useReceiveDownloads,
-  useReceiveRelayLimit,
+  useReceiveRelayAllowance,
+  useRelayUnlocked,
   useReceiveStep,
   useSubscriptionStore,
   useTransferStore
@@ -43,7 +50,9 @@ export default function ReceiveIncomingScreen() {
   const connectionType = useTransferStore((s) => s.connectionType)
   const errorCode = useTransferStore((s) => s.errorCode)
   const isPro = useSubscriptionStore((s) => s.active)
-  const relayLimited = useReceiveRelayLimit()
+  const allowance = useReceiveRelayAllowance(downloads)
+  const toast = useToast()
+  const [reconnecting, setReconnecting] = useState(false)
   const displayError = getDisplayError(t, errorCode)
 
   const { totals, fileOffers } = downloads
@@ -57,6 +66,27 @@ export default function ReceiveIncomingScreen() {
       router.replace('/receive/complete')
     }
   }, [step, router])
+
+  useEffect(() => {
+    if (!reconnecting) return
+    if (step !== 'connecting' && !getConnectFailureCode(step, errorCode)) return
+    setReconnecting(false)
+    router.replace('/receive/connecting')
+  }, [reconnecting, step, errorCode, router])
+
+  useRelayUnlocked(allowance.limited, () =>
+    toast.show({ title: t('receive:relayLimit.unlocked'), durationMs: 3000 })
+  )
+
+  const reconnect = useCallback(() => {
+    setReconnecting(true)
+    reconnectSession().catch((err: unknown) => {
+      console.warn('ReceiveIncomingScreen: reconnect failed', err)
+      setReconnecting(false)
+    })
+  }, [])
+
+  const getPro = useCallback(() => router.push('/account'), [router])
 
   const handleExit = useCallback(() => {
     void clearSession()
@@ -80,12 +110,12 @@ export default function ReceiveIncomingScreen() {
 
   const handlePrimaryAction = async () => {
     try {
-      if (downloads.primaryAction === 'resume-all') {
+      if (allowance.primaryAction === 'resume-all') {
         lightTap()
         await actions.resumeAll()
-      } else if (downloads.primaryAction === 'download-all') {
+      } else if (allowance.primaryAction === 'download-all') {
         lightTap()
-        await actions.downloadInto(uriToPath(Paths.document.uri))
+        await actions.downloadInto(uriToPath(Paths.document.uri), allowance.freePendingOffers)
       }
     } catch (err) {
       console.warn('ReceiveIncomingScreen: download failed', err)
@@ -121,12 +151,40 @@ export default function ReceiveIncomingScreen() {
     <View style={[styles.badge, { backgroundColor: theme.colors.colorSuccessSubtle }]}>
       <View style={[styles.badgeDot, { backgroundColor: theme.colors.colorSuccess }]} />
       <Text style={[styles.badgeText, { color: theme.colors.colorSuccess }]}>
-        {t('common:status.connected')}
+        {connectedStatusLabel(t, connectionType)}
       </Text>
     </View>
   )
 
+  const renderPrimary = () => {
+    const action = allowance.primaryAction
+    if (!action) return null
+
+    const relayAction = relayPrimaryAction(t, action, allowance)
+    const label =
+      relayAction?.label ??
+      getPrimaryDownloadLabel(t, action, { percent: totals.percent, totalBytes })
+
+    return (
+      <Button
+        disabled={relayAction?.disabled}
+        icon={action === 'resume-all' ? <PlayIcon size={18} /> : <DownloadIcon size={18} />}
+        loading={action === 'downloading'}
+        onClick={handlePrimaryAction}
+        size='lg'
+        variant='light'
+        width='full'
+      >
+        {label}
+      </Button>
+    )
+  }
+
   const renderBody = () => {
+    if (reconnecting) {
+      return <ReceiveConnectingView />
+    }
+
     if (isReconnectingStep) {
       return (
         <ReceiveReconnectingView
@@ -182,49 +240,23 @@ export default function ReceiveIncomingScreen() {
         hasNativeHeader
         footer={
           <View style={styles.footerStack}>
-            {relayLimited ? (
-              <Button
-                onClick={() => router.push('/account')}
-                size='lg'
-                variant='light'
-                width='full'
-              >
-                {t('settings:account.getPro')}
-              </Button>
-            ) : null}
-            {downloads.primaryAction && !relayLimited ? (
-              <Button
-                icon={
-                  downloads.primaryAction === 'resume-all' ? (
-                    <PlayIcon size={18} />
-                  ) : (
-                    <DownloadIcon size={18} />
-                  )
-                }
-                loading={downloads.primaryAction === 'downloading'}
-                onClick={() => void handlePrimaryAction()}
-                size='lg'
-                variant='light'
-                width='full'
-              >
-                {getPrimaryDownloadLabel(t, downloads.primaryAction, {
-                  percent: totals.percent,
-                  totalBytes
-                })}
-              </Button>
-            ) : null}
+            {renderPrimary()}
             {endSessionButton}
           </View>
         }
       >
-        {relayLimited ? (
-          <View style={styles.banner}>
-            <ErrorBanner
-              message={t('receive:page.relayLimit.description', { limit: NATIVE_RELAY_MAX_LABEL })}
-            />
-          </View>
-        ) : null}
-        <ReceiveIncomingView />
+        <ReceiveIncomingView
+          rows={allowance.rows}
+          lockedKeys={allowance.lockedKeys}
+          rowsFooter={
+            allowance.limited ? (
+              <RelayLimitNote
+                onGetPro={getPro}
+                onTryAgain={allowance.canReconnect ? reconnect : undefined}
+              />
+            ) : undefined
+          }
+        />
       </Layout>
     )
   }
@@ -255,9 +287,6 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 12,
     fontWeight: '600'
-  },
-  banner: {
-    marginBottom: 16
   },
   footerStack: {
     gap: 8,

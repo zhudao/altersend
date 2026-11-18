@@ -89,11 +89,19 @@
       "v2_1_0": {
         "support": {
           "title": "Aidez à faire vivre AlterSend",
-          "description": "30 000 téléchargements, 3 To relayés, aucun revenu pour l'instant. Pro finance les relais."
+          "description": "Faire tourner les relais coûte de l'argent. Pro les finance et garde AlterSend gratuit pour tous les autres."
         },
         "relayLimit": {
           "title": "Relais gratuit jusqu'à 1 Go",
-          "description": "Les transferts directs restent gratuits et illimités."
+          "description": "Les transferts gratuits par relais vont désormais jusqu'à 1 Mo/s. Les transferts directs restent gratuits et illimités."
+        },
+        "autoAccept": {
+          "title": "Accepter automatiquement des appareils associés",
+          "description": "Les transferts de vos appareils associés démarrent sans demander. À activer dans les Paramètres."
+        },
+        "reliability": {
+          "title": "Des transferts plus fiables",
+          "description": "Après une coupure réseau, le transfert reprend là où il s'était arrêté, et les connexions échouées peuvent être relancées."
         }
       },
       "v2_0_0": {
@@ -123,7 +131,8 @@
   "status": {
     "connected": "Connecté",
     "wantsToSend": "veut vous envoyer {{label}}{{size}}",
-    "connectedViaRelay": "Connecté via relais"
+    "connectedViaRelay": "Connecté via relais",
+    "connectedViaOwnRelay": "Connecté via votre relais"
   },
   "confirm": {
     "leaveShareSession": "Quitter mettra fin à votre session de partage active. Continuer ?",

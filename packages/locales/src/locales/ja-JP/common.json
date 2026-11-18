@@ -89,11 +89,19 @@
       "v2_1_0": {
         "support": {
           "title": "AlterSend の存続にご協力を",
-          "description": "3万ダウンロード、リレー転送 3 TB、収益はまだゼロ。Pro がリレーの費用をまかないます。"
+          "description": "リレーの運用には費用がかかります。Pro がその費用をまかない、ほかの人は AlterSend を無料で使い続けられます。"
         },
         "relayLimit": {
           "title": "リレーは 1 GB まで無料",
-          "description": "直接転送はこれからも無料・無制限です。"
+          "description": "無料のリレー転送は最大 1 MB/s になりました。直接転送はこれからも無料・無制限です。"
+        },
+        "autoAccept": {
+          "title": "ペアリング済みデバイスから自動的に受け入れる",
+          "description": "ペアリング済みデバイスからの転送が確認なしで始まります。設定でオンにできます。"
+        },
+        "reliability": {
+          "title": "より安定した転送",
+          "description": "ネットワークが切れても途中から再開し、失敗した接続は再試行できます。"
         }
       },
       "v2_0_0": {
@@ -123,7 +131,8 @@
   "status": {
     "connected": "接続済み",
     "wantsToSend": "が{{label}}{{size}}を送信しようとしています",
-    "connectedViaRelay": "リレー経由で接続"
+    "connectedViaRelay": "リレー経由で接続",
+    "connectedViaOwnRelay": "自分のリレー経由で接続"
   },
   "confirm": {
     "leaveShareSession": "退出すると、アクティブな共有セッションが終了します。続く？",

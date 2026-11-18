@@ -89,11 +89,19 @@
       "v2_1_0": {
         "support": {
           "title": "AlterSend를 지켜 주세요",
-          "description": "다운로드 3만 회, 릴레이 3TB, 아직 수입은 없습니다. Pro가 릴레이 비용을 냅니다."
+          "description": "릴레이 운영에는 비용이 듭니다. Pro가 그 비용을 내고, 다른 모두는 AlterSend를 무료로 쓸 수 있습니다."
         },
         "relayLimit": {
           "title": "릴레이 1GB까지 무료",
-          "description": "직접 전송은 계속 무료이며 무제한입니다."
+          "description": "무료 릴레이 전송은 이제 최대 1MB/s로 진행됩니다. 직접 전송은 계속 무료이며 무제한입니다."
+        },
+        "autoAccept": {
+          "title": "페어링된 기기에서 자동 수락",
+          "description": "페어링된 기기의 전송이 묻지 않고 시작됩니다. 설정에서 켤 수 있습니다."
+        },
+        "reliability": {
+          "title": "더 안정적인 전송",
+          "description": "네트워크가 끊겨도 멈춘 지점부터 이어서 전송하고, 실패한 연결은 다시 시도할 수 있습니다."
         }
       },
       "v2_0_0": {
@@ -123,7 +131,8 @@
   "status": {
     "connected": "연결됨",
     "wantsToSend": "님이 {{label}}{{size}}을 보내려고 합니다",
-    "connectedViaRelay": "릴레이를 통해 연결됨"
+    "connectedViaRelay": "릴레이를 통해 연결됨",
+    "connectedViaOwnRelay": "내 릴레이를 통해 연결됨"
   },
   "confirm": {
     "leaveShareSession": "나가면 활성 공유 세션이 종료됩니다. 계속하다?",
